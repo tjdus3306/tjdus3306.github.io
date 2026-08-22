@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<!-- saved from url=(0054)file:///C:/Users/USER/Downloads/gimpo-bus-route_6.html -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/css2" rel="stylesheet">
+<link rel="stylesheet" href="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/leaflet.css">
+<style>
+  :root{
+    --bg:#F6F5F1;
+    --paper:#FFFFFF;
+    --ink:#1F2A24;
+    --ink-soft:#5B665F;
+    --line:#1E5F74;
+    --line-soft:#DCEAEC;
+    --accent:#E8622C;
+    --accent-soft:#FBE3D6;
+    --border:#DDD8C9;
+    --font-display:'Black Han Sans', sans-serif;
+    --font-body:'Noto Sans KR', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.6;
+    padding-bottom:80px;
+  }
+  a{ color:var(--line); }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    background:var(--ink);
+    color:var(--bg);
+    padding:38px 20px 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  .masthead::after{
+    content:"";
+    position:absolute; right:-40px; bottom:-60px;
+    width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, rgba(232,98,44,0.35), transparent 70%);
+  }
+  .masthead-inner{ max-width:980px; margin:0 auto; position:relative; z-index:1; }
+  .eyebrow{
+    font-family:var(--font-mono); font-size:13px; letter-spacing:.12em;
+    color:var(--accent); text-transform:uppercase; margin:0 0 10px;
+  }
+  h1.title{
+    font-family:var(--font-display); font-weight:400;
+    font-size:clamp(28px,5vw,48px); line-height:1.15; margin:0 0 12px;
+    letter-spacing:.01em;
+  }
+  .masthead p.lead{
+    max-width:640px; color:#D8DAD3; font-size:15.5px; margin:0 0 22px;
+  }
+  .student-bar{
+    display:flex; flex-wrap:wrap; gap:10px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:10px; padding:14px;
+  }
+  .student-bar label{
+    display:flex; flex-direction:column; gap:5px;
+    font-size:12px; color:#B9BEB6; flex:1; min-width:120px;
+  }
+  .student-bar input{
+    font-family:var(--font-body); font-size:14px; padding:8px 10px;
+    border-radius:6px; border:1px solid rgba(255,255,255,0.2);
+    background:rgba(255,255,255,0.95); color:var(--ink);
+  }
+
+  /* ---------- Route track (signature nav) ---------- */
+  .route-track-wrap{
+    background:var(--paper);
+    border-bottom:1px solid var(--border);
+    position:sticky; top:0; z-index:50;
+    box-shadow:0 2px 10px rgba(0,0,0,0.04);
+  }
+  .route-track{
+    max-width:980px; margin:0 auto; padding:14px 20px 10px;
+    position:relative;
+  }
+  .track-line{
+    position:absolute; left:38px; right:38px; top:24px;
+    height:4px; background:var(--line-soft); border-radius:2px;
+  }
+  .track-fill{
+    position:absolute; left:38px; top:24px; height:4px;
+    background:var(--line); border-radius:2px; width:0%;
+    transition:width .45s ease;
+  }
+  .track-bus{
+    position:absolute; top:11px; left:38px; font-size:20px;
+    transform:translateX(-50%); transition:left .45s ease;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+  }
+  .stops{ display:flex; justify-content:space-between; position:relative; }
+  .stop{
+    text-decoration:none; color:var(--ink-soft); text-align:center;
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;
+    font-size:11.5px; padding-top:2px; min-width:56px;
+  }
+  .stop-num{
+    width:30px; height:30px; border-radius:50%;
+    background:var(--paper); border:3px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-weight:600; font-size:13px;
+    color:var(--line); transition:all .3s ease;
+  }
+  .stop.active .stop-num{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .stop.done .stop-num{ border-color:var(--line); background:var(--line); color:#fff; }
+  .stop-name{ font-weight:500; }
+  .stop.active .stop-name{ color:var(--accent); font-weight:700; }
+
+  /* ---------- Main layout ---------- */
+  main{ max-width:980px; margin:0 auto; padding:34px 20px 10px; }
+  section.step{
+    background:var(--paper);
+    border:1px solid var(--border);
+    border-left:6px solid var(--line);
+    border-radius:12px;
+    padding:26px 26px 28px;
+    margin-bottom:34px;
+    scroll-margin-top:110px;
+  }
+  .step-head{ display:flex; align-items:flex-start; gap:14px; margin-bottom:6px; }
+  .step-badge{
+    font-family:var(--font-mono); background:var(--line); color:#fff;
+    width:34px; height:34px; border-radius:50%; flex:none;
+    display:flex; align-items:center; justify-content:center; font-weight:600;
+  }
+  .step h2{ font-family:var(--font-display); font-weight:400; font-size:23px; margin:2px 0 6px; }
+  .step .step-desc{ color:var(--ink-soft); font-size:14.5px; margin:0 0 18px; max-width:720px; }
+  .callout{
+    background:#FBFAF6; border:1px dashed var(--border); border-radius:8px;
+    padding:12px 14px; font-size:13.5px; color:var(--ink-soft); margin:0 0 18px;
+  }
+  .callout b{ color:var(--ink); }
+
+  .btn-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .btn{
+    font-family:var(--font-body); font-size:13.5px; font-weight:500;
+    border:1px solid var(--border); background:var(--paper); color:var(--ink);
+    padding:9px 14px; border-radius:8px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:7px; text-decoration:none;
+    transition:transform .12s ease, border-color .12s ease;
+  }
+  .btn:hover{ border-color:var(--line); transform:translateY(-1px); }
+  .btn.primary{ background:var(--line); border-color:var(--line); color:#fff; }
+  .btn.primary:hover{ background:#164A5B; }
+  .btn.accent{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.accent:hover{ background:#C94F1E; }
+  .btn.ghost{ background:transparent; }
+  .btn.small{ padding:6px 10px; font-size:12.5px; }
+  .btn[disabled]{ opacity:.4; cursor:not-allowed; transform:none; }
+  .btn.active-toggle{ background:var(--ink); border-color:var(--ink); color:#fff; }
+
+  .field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:6px; }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:12.5px; color:var(--ink-soft); font-weight:500; }
+  .field input, .field textarea{
+    font-family:var(--font-body); font-size:14px; padding:9px 10px;
+    border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--ink);
+  }
+  .field textarea{ resize:vertical; min-height:70px; }
+
+  /* Map */
+  #map{
+    height:460px; width:100%; border-radius:10px; border:1px solid var(--border);
+    margin-bottom:14px; cursor:default;
+  }
+  #map.mode-draw{ cursor:crosshair; }
+  .map-toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    background:#FBFAF6; border:1px solid var(--border); border-radius:9px;
+    padding:12px; margin-bottom:14px;
+  }
+  .mode-group{ display:flex; gap:6px; }
+  .swatches{ display:flex; gap:6px; align-items:center; }
+  .swatch{
+    width:22px; height:22px; border-radius:50%; border:2px solid transparent;
+    cursor:pointer; padding:0;
+  }
+  .swatch.selected{ border-color:var(--ink); transform:scale(1.15); }
+  .divider-v{ width:1px; align-self:stretch; background:var(--border); }
+  .route-name-input{ flex:1; min-width:160px; }
+  .route-name-input input{ width:100%; }
+
+  .route-list{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .route-chip{
+    display:flex; align-items:center; gap:10px; background:#FBFAF6;
+    border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13.5px;
+  }
+  .route-chip .dot{ width:14px; height:14px; border-radius:50%; flex:none; }
+  .route-chip .info{ flex:1; }
+  .route-chip .info b{ display:block; }
+  .route-chip .info span{ color:var(--ink-soft); font-family:var(--font-mono); font-size:12px; }
+  .empty-note{ font-size:13px; color:var(--ink-soft); font-style:italic; padding:10px 0; }
+
+  footer{ text-align:center; color:var(--ink-soft); font-size:12px; padding:30px 20px; }
+
+  @media (max-width:720px){
+    .field-grid{ grid-template-columns:1fr; }
+    .stop-name{ display:none; }
+  }
+  @media print{
+    .route-track-wrap, .map-toolbar, .btn-row, .btn, .mode-group, .student-bar input{ display:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <p class="eyebrow">지리 탐구활동 · 우리 동네 버스 노선</p>
+    <h1 class="title">버스로 그리는 우리 동네</h1>
+    <p class="lead">김포시 운양동을 중심으로 지나가는 시내버스 노선을 찾아, 그 노선이 지나는 길을 지도 위에 직접 그려봅니다. 노선 검색부터 그리기까지 두 정류장을 차례로 지나갑니다.</p>
+    <div class="student-bar">
+      <label>학교 / 학년<input id="s-school" placeholder="예: 000중학교 1학년"></label>
+      <label>이름<input id="s-name" placeholder="이름을 입력하세요"></label>
+      <label>활동 날짜<input id="s-date" type="date"></label>
+    </div>
+  </div>
+</header>
+
+<nav class="route-track-wrap">
+  <div class="route-track">
+    <div class="track-line"></div>
+    <div class="track-fill" id="trackFill" style="width:0%;"></div>
+    <div class="track-bus" id="trackBus" style="left: calc(0% + 38px);">🚌</div>
+    <div class="stops">
+      <a class="stop active" data-idx="0" href="file:///C:/Users/USER/Downloads/gimpo-bus-route_6.html#step1"><span class="stop-num">1</span><span class="stop-name">노선 검색</span></a>
+      <a class="stop" data-idx="1" href="file:///C:/Users/USER/Downloads/gimpo-bus-route_6.html#step2"><span class="stop-num">2</span><span class="stop-name">노선 그리기</span></a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- STEP 1 -->
+  <section class="step" id="step1">
+    <div class="step-head">
+      <div class="step-badge">1</div>
+      <div>
+        <h2>정류장 1 · 김포시 시내버스 노선 검색하기</h2>
+        <p class="step-desc">네이버지도에서 운양동을 지나는 시내버스 노선 하나를 정합니다. 출발지부터 종점까지 어떤 동네를 지나는지 훑어보세요.</p>
+      </div>
+    </div>
+    <div class="callout"><b>Tip.</b> 네이버지도에서 노선 번호나 "김포 버스 노선"으로 검색하면 정류장 목록과 경로를 지도 위에서 바로 확인할 수 있어요. 운양동을 지나는 노선(예: 김포골드라인 연계 버스, 70번대·88번대 등)을 살펴보세요.<p></p>
+    <div class="btn-row">
+      <a class="btn primary" target="_blank" rel="noopener" href="https://map.naver.com/p/search/%EA%B9%80%ED%8F%AC%20%EB%B2%84%EC%8A%A4%20%EB%85%B8%EC%84%A0">🗺️ 네이버지도에서 검색</a>
+    </div>
+    <div class="field-grid">
+      <div class="field"><label>조사할 버스 노선 번호</label><input id="bus-number" placeholder="예: 70"></div>
+      <div class="field"><label>운행 구간 (기점 ~ 종점)</label><input id="bus-range" placeholder="예: 운양동 ~ 김포공항"></div>
+      <div class="field" style="grid-column:1/-1;"><label>이 노선을 고른 이유</label><textarea id="bus-reason" placeholder="예: 운양동 한강신도시와 서울 방면을 이어주는 노선이라 지역 변화가 잘 보일 것 같다."></textarea></div>
+    </div>
+  </div></section>
+
+  <!-- STEP 2 -->
+  <section class="step" id="step2">
+    <div class="step-head">
+      <div class="step-badge">2</div>
+      <div>
+        <h2>정류장 2 · 지도 위에 내 버스 노선 그리기</h2>
+        <p class="step-desc">1번에서 찾은 노선이 지나는 길을 따라 지도를 클릭해 점을 찍으며 선을 그립니다. 지도는 운양동을 중심으로 열려 있어요. 노선은 <b>하나만</b> 그릴 수 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="map-toolbar">
+      <div class="mode-group">
+        <button class="btn small active-toggle" id="modeDrawBtn" onclick="setMode(&#39;draw&#39;)">✏️ 노선 그리기</button>
+        <button class="btn small" id="modeViewBtn" onclick="setMode(&#39;view&#39;)">🖐 지도 이동</button>
+      </div>
+      <div class="divider-v"></div>
+      <div class="swatches" id="swatches"><button class="swatch selected" type="button" style="background: rgb(217, 72, 61);"></button><button class="swatch" type="button" style="background: rgb(30, 95, 116);"></button><button class="swatch" type="button" style="background: rgb(232, 98, 44);"></button><button class="swatch" type="button" style="background: rgb(63, 154, 99);"></button><button class="swatch" type="button" style="background: rgb(124, 111, 156);"></button><button class="swatch" type="button" style="background: rgb(46, 46, 46);"></button></div>
+      <div class="divider-v"></div>
+      <div class="route-name-input"><input id="routeNameInput" placeholder="이 노선의 이름 (예: 70번 순환)"></div>
+      <button class="btn small" onclick="undoPoint()">↩️ 마지막 점 취소</button>
+      <button class="btn small primary" onclick="finishRoute()">✅ 이 노선 저장</button>
+      <button class="btn small ghost" onclick="clearAllRoutes()">🗑️ 노선 지우기</button>
+    </div>
+
+    <div id="map" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom mode-draw" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(0px, 0px, 0px) scale(1);"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6340.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(207px, 80px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6340(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(463px, 80px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6339.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(207px, -176px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6339(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(463px, -176px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6341.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(207px, 336px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6341(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(463px, 336px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6340(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-49px, 80px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6340(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(719px, 80px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6339(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-49px, -176px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6339(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(719px, -176px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6341(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-49px, 336px, 0px); opacity: 1;"><img alt="" src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/6341(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(719px, 336px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(3.57323e+06px, 1.62319e+06px, 0px) scale(8192);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="file:///C:/Users/USER/Downloads/gimpo-bus-route_6.html#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="file:///C:/Users/USER/Downloads/gimpo-bus-route_6.html#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com/" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap contributors</div></div></div></div>
+    <p class="upload-hint" id="modeHint">현재 모드: <b>✏️ 노선 그리기</b> — 지도를 클릭해서 버스가 지나는 길을 따라 점을 찍으세요.</p>
+
+    <div class="route-list" id="routeList"><p class="empty-note">아직 저장된 노선이 없습니다. 지도를 클릭해 노선을 그리고 "이 노선 저장"을 눌러보세요.</p></div>
+
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn accent" onclick="saveMapImage()">🖼️ 완성한 노선 지도 PNG로 저장</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>버스로 그리는 우리 동네 · 김포시 운양동 버스 노선 그리기 · 지도 데이터 ⓒ OpenStreetMap contributors</footer>
+
+<script src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/leaflet.js.다운로드"></script>
+<script src="./버스로 그리는 우리 동네 — 김포시 운양동 버스 노선 그리기_files/html2canvas.min.js.다운로드"></script>
+<script>
+/* ---------------- Route track scroll tracking ---------------- */
+const stopEls = Array.from(document.querySelectorAll('.stop'));
+const sectionEls = ['step1','step2'].map(id=>document.getElementById(id));
+const trackFill = document.getElementById('trackFill');
+const trackBus = document.getElementById('trackBus');
+
+function updateTrack(activeIdx){
+  stopEls.forEach((s,i)=>{
+    s.classList.toggle('active', i===activeIdx);
+    s.classList.toggle('done', i<activeIdx);
+  });
+  const pct = (activeIdx/(stopEls.length-1))*100;
+  trackFill.style.width = pct+'%';
+  trackBus.style.left = 'calc(38px + (100% - 76px) * '+(activeIdx/(stopEls.length-1))+')';
+}
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const idx = sectionEls.indexOf(e.target);
+      if(idx>-1) updateTrack(idx);
+    }
+  });
+},{ rootMargin:'-40% 0px -50% 0px' });
+sectionEls.forEach(el=>io.observe(el));
+updateTrack(0);
+
+/* ---------------- Map setup — 김포시 운양동 중심 ---------------- */
+const GIMPO_UNYANG_CENTER = [37.6389, 126.6924];
+const map = L.map('map', { attributionControl:true }).setView(GIMPO_UNYANG_CENTER, 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const routesLayer = L.layerGroup().addTo(map);
+
+const ROUTE_COLORS = ['#D9483D','#1E5F74','#E8622C','#3F9A63','#7C6F9C','#2E2E2E'];
+let currentColor = ROUTE_COLORS[0];
+const swatchWrap = document.getElementById('swatches');
+ROUTE_COLORS.forEach((c,i)=>{
+  const b = document.createElement('button');
+  b.className = 'swatch'+(i===0?' selected':'');
+  b.style.background = c;
+  b.type = 'button';
+  b.onclick = ()=>{
+    currentColor = c;
+    document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+    b.classList.add('selected');
+    if(tempLine) tempLine.setStyle({color:currentColor});
+  };
+  swatchWrap.appendChild(b);
+});
+
+/* ---------------- Mode handling (draw / view only) ---------------- */
+let mode = 'draw';
+let currentPoints = [];
+let tempLine = null;
+
+const mapEl = document.getElementById('map');
+const modeHint = document.getElementById('modeHint');
+const modeBtns = { draw: document.getElementById('modeDrawBtn'), view: document.getElementById('modeViewBtn') };
+
+function setMode(m){
+  if(m==='draw' && modeBtns.draw.disabled) return;
+  mode = m;
+  mapEl.classList.remove('mode-draw');
+  Object.values(modeBtns).forEach(b=>b.classList.remove('active-toggle'));
+  if(m==='draw'){
+    mapEl.classList.add('mode-draw'); modeBtns.draw.classList.add('active-toggle');
+    modeHint.innerHTML = '현재 모드: <b>✏️ 노선 그리기</b> — 지도를 클릭해서 버스가 지나는 길을 따라 점을 찍으세요.';
+  } else {
+    modeBtns.view.classList.add('active-toggle');
+    modeHint.innerHTML = '현재 모드: <b>🖐 지도 이동</b> — 지도를 자유롭게 드래그하고 확대/축소하세요.';
+  }
+}
+setMode('draw');
+
+map.on('click', (e)=>{
+  if(mode!=='draw') return;
+  if(routes.length>=1) return; // 노선은 하나만
+  currentPoints.push(e.latlng);
+  if(tempLine){ tempLine.setLatLngs(currentPoints); }
+  else{
+    tempLine = L.polyline(currentPoints, { color: currentColor, weight:5, opacity:0.85, dashArray:'8,7' }).addTo(map);
+  }
+});
+
+function undoPoint(){
+  if(currentPoints.length===0) return;
+  currentPoints.pop();
+  if(currentPoints.length===0){
+    if(tempLine){ map.removeLayer(tempLine); tempLine=null; }
+  } else {
+    tempLine.setLatLngs(currentPoints);
+  }
+}
+
+function finishRoute(){
+  if(routes.length>=1){
+    alert('버스 노선은 하나만 그릴 수 있어요. 다시 그리려면 먼저 "노선 지우기"로 저장된 노선을 삭제해주세요.');
+    return;
+  }
+  if(currentPoints.length<2){
+    alert('노선을 완성하려면 지도를 두 번 이상 클릭해 점을 두 개 이상 찍어주세요.');
+    return;
+  }
+  const nameInput = document.getElementById('routeNameInput');
+  const name = nameInput.value.trim() || '나의 버스 노선';
+  const layer = L.polyline(currentPoints, { color: currentColor, weight:5, opacity:0.9 }).addTo(routesLayer);
+  layer.bindPopup('<b>'+escapeHtml(name)+'</b><br>지점 '+currentPoints.length+'개');
+  routes.push({ id: Date.now(), name, color: currentColor, points: currentPoints.map(p=>({lat:p.lat,lng:p.lng})), layer });
+  if(tempLine){ map.removeLayer(tempLine); tempLine=null; }
+  currentPoints = [];
+  nameInput.value = '';
+  renderRoutes();
+  updateDrawAvailability();
+}
+
+function clearAllRoutes(){
+  if(routes.length===0 && currentPoints.length===0) return;
+  if(!confirm('그려둔 노선을 지울까요? 되돌릴 수 없습니다.')) return;
+  routesLayer.clearLayers();
+  routes = [];
+  if(tempLine){ map.removeLayer(tempLine); tempLine=null; }
+  currentPoints = [];
+  renderRoutes();
+  updateDrawAvailability();
+}
+
+function updateDrawAvailability(){
+  const full = routes.length>=1;
+  modeBtns.draw.disabled = full;
+  document.getElementById('routeNameInput').disabled = full;
+  if(full && mode==='draw') setMode('view');
+}
+
+let routes = [];
+function renderRoutes(){
+  const wrap = document.getElementById('routeList');
+  wrap.innerHTML = '';
+  if(routes.length===0){
+    wrap.innerHTML = '<p class="empty-note">아직 저장된 노선이 없습니다. 지도를 클릭해 노선을 그리고 "이 노선 저장"을 눌러보세요.</p>';
+    return;
+  }
+  routes.forEach(r=>{
+    const chip = document.createElement('div');
+    chip.className = 'route-chip';
+    chip.innerHTML = '<span class="dot" style="background:'+r.color+'"></span>'+
+      '<span class="info"><b>'+escapeHtml(r.name)+'</b><span>지점 '+r.points.length+'개</span></span>'+
+      '<button class="btn small ghost" data-id="'+r.id+'">삭제</button>';
+    chip.querySelector('button').onclick = ()=> deleteRoute(r.id);
+    wrap.appendChild(chip);
+  });
+}
+function deleteRoute(id){
+  const r = routes.find(x=>x.id===id);
+  if(!r) return;
+  routesLayer.removeLayer(r.layer);
+  routes = routes.filter(x=>x.id!==id);
+  renderRoutes();
+  updateDrawAvailability();
+}
+renderRoutes();
+updateDrawAvailability();
+
+/* ---------------- helpers ---------------- */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+  });
+}
+
+/* 노선을 실제 좌표 기준으로 캔버스에 그려주는 함수 (지도 배경 위에 겹쳐 그림) */
+function drawOverlay(ctx, scaleX, scaleY){
+  routes.forEach(r=>{
+    ctx.strokeStyle = r.color; ctx.lineWidth = 5*scaleX; ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath();
+    r.points.forEach((p,i)=>{
+      const pt = map.latLngToContainerPoint(L.latLng(p.lat,p.lng));
+      const x = pt.x*scaleX, y = pt.y*scaleY;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  });
+}
+
+/* 배경 지도를 못 읽어오는 경우(브라우저 보안 정책)를 대비한 대체 캔버스 —
+   이 경우에도 노선 위치는 항상 정확하게 표시됩니다. */
+function makeFallbackCanvas(){
+  const w = mapEl.clientWidth, h = mapEl.clientHeight;
+  const scale = window.devicePixelRatio || 1;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w*scale); canvas.height = Math.round(h*scale);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#EAF1EC'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = '#D7E3DC'; ctx.lineWidth = 1;
+  for(let x=0;x<canvas.width;x+=40*scale){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+  for(let y=0;y<canvas.height;y+=40*scale){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+  ctx.fillStyle = '#8A8377'; ctx.font = (13*scale)+'px sans-serif';
+  ctx.fillText('지도 배경은 표시되지 않았지만 노선 위치는 정확합니다', 12*scale, 22*scale);
+  drawOverlay(ctx, scale, scale);
+  return canvas;
+}
+
+function captureMapCanvas(callback){
+  html2canvas(mapEl, { useCORS:true, allowTaint:false }).then(baseCanvas=>{
+    const scaleX = baseCanvas.width / mapEl.clientWidth, scaleY = baseCanvas.height / mapEl.clientHeight;
+    const ctx = baseCanvas.getContext('2d');
+    drawOverlay(ctx, scaleX, scaleY);
+    try{
+      baseCanvas.toDataURL('image/png'); // 캔버스가 오염되었는지 확인
+      callback(baseCanvas);
+    }catch(err){
+      callback(makeFallbackCanvas());
+    }
+  }).catch(()=> callback(makeFallbackCanvas()));
+}
+
+function saveMapImage(){
+  captureMapCanvas(canvas=>{
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = '김포_운양동_버스노선지도.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  });
+}
+</script>
+
+
+
+</body></html>
