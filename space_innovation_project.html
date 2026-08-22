@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 동네 공간 혁신 프로젝트 · 김포</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@400;700&family=Baloo+2:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --cream:#FFF8EC;
+    --cream-2:#FFF1DC;
+    --brown:#5B4130;
+    --brown-70:rgba(91,65,48,0.72);
+    --brown-45:rgba(91,65,48,0.48);
+    --mint:#8FD4B8;
+    --mint-dark:#4E9E7C;
+    --mint-line:#E4F3EC;
+    --yellow:#FFC857;
+    --yellow-dark:#E8A928;
+    --coral:#FF8C69;
+    --coral-dark:#F26B41;
+    --sky:#BEE3F8;
+    --sky-dark:#8FCBEF;
+    --naver:#03C75A;
+    --white:#FFFFFF;
+    --radius:20px;
+    --radius-sm:12px;
+    --shadow-pop: 4px 4px 0 rgba(91,65,48,0.9);
+    --shadow-pop-sm: 3px 3px 0 rgba(91,65,48,0.9);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--brown);
+    font-family:'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(circle at 92% 8%, rgba(255,200,87,0.25) 0, transparent 40%),
+      radial-gradient(circle at 6% 90%, rgba(143,212,184,0.25) 0, transparent 40%);
+  }
+  ::selection{background:var(--coral); color:#fff;}
+  button{font-family:inherit;}
+  .app{display:flex; min-height:100vh; width:100%;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:264px; flex-shrink:0;
+    background:var(--mint-dark);
+    color:#fff;
+    padding:26px 20px 20px;
+    display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+    border-right:3px solid var(--brown);
+  }
+  .brand-emoji{font-size:30px; margin-bottom:6px;}
+  .brand-title{font-family:'Jua', sans-serif; font-size:23px; line-height:1.4; margin-bottom:4px;}
+  .brand-sub{font-size:12.5px; color:rgba(255,255,255,0.85); margin-bottom:22px;}
+  .progress-track{height:10px; background:rgba(255,255,255,0.25); border-radius:10px; overflow:hidden; margin-bottom:5px; border:2px solid rgba(255,255,255,0.4);}
+  .progress-fill{height:100%; background:var(--yellow); width:0%; transition:width .4s ease; border-radius:10px;}
+  .progress-label{font-size:11.5px; color:rgba(255,255,255,0.85); margin-bottom:20px;}
+  .nav-list{list-style:none; margin:0; padding:0; flex:1;}
+  .nav-item{display:flex; align-items:flex-start; gap:10px; padding:10px 11px; border-radius:14px; cursor:pointer; margin-bottom:4px; transition:all .15s ease; border:2px solid transparent;}
+  .nav-item:hover{background:rgba(255,255,255,0.14);}
+  .nav-item.active{background:var(--white); border-color:var(--brown);}
+  .nav-num{font-family:'Baloo 2', sans-serif; font-weight:700; font-size:12px; color:rgba(255,255,255,0.7); padding-top:2px; min-width:22px;}
+  .nav-item.active .nav-num{color:var(--coral-dark);}
+  .nav-item.done .nav-num::after{content:" ✓";}
+  .nav-text{font-size:13px; line-height:1.4; color:rgba(255,255,255,0.92);}
+  .nav-item.active .nav-text{color:var(--brown); font-weight:700;}
+  .sidebar-foot{font-size:10.5px; color:rgba(255,255,255,0.7); padding-top:16px; border-top:2px dashed rgba(255,255,255,0.35); line-height:1.6;}
+
+  /* ---------- MAIN ---------- */
+  .main-wrap{flex:1; display:flex; flex-direction:column; min-height:100vh;}
+  .main-scroll{flex:1; padding:48px 56px 30px; max-width:920px; width:100%; margin:0 auto;}
+  @media (max-width: 720px){ .main-scroll{padding:30px 18px 24px;} }
+
+  .stage-eyebrow{font-family:'Baloo 2', sans-serif; font-weight:700; font-size:13px; color:var(--coral-dark); letter-spacing:0.02em; margin-bottom:8px; display:flex; align-items:center; gap:8px;}
+  h1.stage-title{font-family:'Jua', sans-serif; font-size:32px; line-height:1.35; color:var(--brown); margin:0 0 12px;}
+  .stage-desc{font-size:14.5px; line-height:1.75; color:var(--brown-70); max-width:660px; margin-bottom:30px;}
+  .field-block{margin-bottom:26px;}
+  .field-label{display:block; font-size:14px; font-weight:700; color:var(--brown); margin-bottom:6px;}
+  .field-hint{font-size:12.5px; color:var(--brown-45); margin-bottom:10px; line-height:1.55;}
+  input[type="text"], select{
+    width:100%; background:#fff; border:2px solid var(--brown); border-radius:var(--radius-sm);
+    padding:11px 13px; font-family:'Noto Sans KR', sans-serif; font-size:14.5px; color:var(--brown);
+  }
+  input[type="text"]:focus, select:focus{ outline:none; border-color:var(--coral-dark); box-shadow:0 0 0 3px rgba(255,140,105,0.25); }
+  .row-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media (max-width:640px){.row-3{grid-template-columns:1fr;}}
+
+  /* career cards */
+  .career-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:12px; margin-bottom:30px;}
+  .career-card{border:2.5px solid var(--brown); background:#fff; border-radius:var(--radius-sm); padding:14px 12px; cursor:pointer; box-shadow:var(--shadow-pop-sm); transition:transform .12s ease;}
+  .career-card:hover{transform:translate(-1px,-1px);}
+  .career-card.selected{background:var(--yellow);}
+  .career-icon{font-size:24px; margin-bottom:6px; display:block;}
+  .career-name{font-weight:700; font-size:14px; color:var(--brown);}
+
+  .city-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px; margin-bottom:16px;}
+  .city-card{border:2.5px solid var(--brown); background:#fff; border-radius:var(--radius); overflow:hidden; cursor:pointer; box-shadow:var(--shadow-pop-sm); transition:transform .12s ease;}
+  .city-card:hover{transform:translate(-1px,-1px);}
+  .city-card.selected{outline:3px solid var(--coral-dark); outline-offset:2px;}
+  .city-photo{width:100%; height:120px; object-fit:cover; display:block; background:var(--mint-line);}
+  .city-body{padding:12px 13px;}
+  .city-name{font-weight:700; font-size:14.5px; color:var(--brown); margin-bottom:2px;}
+  .city-country{font-size:10.5px; color:var(--mint-dark); font-weight:700; margin-bottom:6px;}
+  .city-desc{font-size:12px; color:var(--brown-70); line-height:1.5;}
+  .city-detail{
+    border:3px solid var(--brown); border-radius:var(--radius); background:#fff; overflow:hidden;
+    box-shadow:var(--shadow-pop); margin-bottom:20px; display:grid; grid-template-columns:220px 1fr;
+  }
+  @media (max-width:640px){.city-detail{grid-template-columns:1fr;}}
+  .city-detail img{width:100%; height:100%; object-fit:cover; display:block; min-height:180px;}
+  .city-detail-body{padding:20px 22px;}
+  .city-detail-name{font-family:'Jua', sans-serif; font-size:21px; color:var(--brown); margin-bottom:2px;}
+  .city-detail-country{font-size:11px; font-weight:700; color:var(--mint-dark); margin-bottom:14px;}
+  .city-feature-list{list-style:none; margin:0; padding:0;}
+  .city-feature-list li{display:flex; gap:8px; font-size:13px; line-height:1.6; color:var(--brown); margin-bottom:8px;}
+  .city-feature-list li::before{content:"🌟"; flex-shrink:0;}
+
+  /* region cards */
+  .region-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:12px; margin-bottom:18px;}
+  .region-card{
+    border:2.5px solid var(--brown); background:#fff; border-radius:var(--radius-sm);
+    padding:14px 12px; text-align:center; cursor:pointer; box-shadow:var(--shadow-pop-sm); transition:transform .12s ease;
+  }
+  .region-card:hover{transform:translate(-1px,-1px);}
+  .region-card.selected{background:var(--sky);}
+  .region-icon{font-size:26px; display:block; margin-bottom:6px;}
+  .region-name{font-weight:700; font-size:13px; color:var(--brown); margin-bottom:6px;}
+  .region-keyword-chip{display:inline-block; background:var(--mint); color:#fff; font-weight:700; font-size:10.5px; padding:3px 9px; border-radius:20px;}
+  .recommend-card{border:2.5px dashed var(--mint-dark); background:#fff; border-radius:var(--radius); padding:16px 18px; margin-bottom:18px;}
+  .recommend-label{font-size:11px; font-weight:700; color:var(--mint-dark); margin-bottom:6px;}
+  .recommend-keyword{display:inline-block; background:var(--mint); color:#fff; font-weight:700; font-size:13px; padding:4px 12px; border-radius:20px; margin-bottom:10px;}
+  .recommend-text{font-size:13px; line-height:1.65; color:var(--brown-70);}
+
+  /* region photo (reference) */
+  .region-photo-card{border:3px solid var(--brown); border-radius:var(--radius); overflow:hidden; background:#fff; box-shadow:var(--shadow-pop); margin-bottom:20px;}
+  .region-photo-card img{width:100%; height:260px; object-fit:cover; display:block;}
+  .region-photo-body{padding:16px 20px;}
+  .region-photo-title{font-family:'Jua', sans-serif; font-size:17px; color:var(--brown); margin-bottom:6px;}
+
+  /* naver street view card */
+  .naver-card{border:3px solid var(--brown); border-radius:var(--radius); background:#fff; box-shadow:var(--shadow-pop); padding:22px; margin-bottom:20px;}
+  .naver-card-head{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+  .naver-card-head .emoji{font-size:30px;}
+  .naver-card-head .region-title{font-family:'Jua', sans-serif; font-size:19px; color:var(--brown);}
+  .naver-card-head .region-sub{font-size:11.5px; color:var(--brown-45);}
+  .btn-naver{
+    background:var(--naver); border-color:#029947; color:#fff; font-size:15px; padding:13px 22px;
+  }
+  .guide-list{list-style:none; margin:14px 0 0; padding:0; counter-reset:g;}
+  .guide-list li{
+    counter-increment:g; display:flex; gap:10px; font-size:13px; line-height:1.6; color:var(--brown-70);
+    margin-bottom:8px; align-items:flex-start;
+  }
+  .guide-list li::before{
+    content:counter(g); flex-shrink:0; width:20px; height:20px; border-radius:50%; background:var(--yellow);
+    color:var(--brown); font-weight:700; font-size:11px; display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif;
+  }
+  .capture-slot{
+    border:2.5px dashed var(--brown); border-radius:var(--radius); background:var(--cream-2);
+    aspect-ratio:4/3; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:16px; position:relative; cursor:pointer; overflow:hidden; margin-top:16px;
+  }
+  .capture-slot.filled{border-style:solid; background:#fff;}
+  .capture-slot img{width:100%; height:100%; object-fit:cover; display:block; position:absolute; inset:0;}
+  .capture-hint{font-size:12.5px; color:var(--brown-45);}
+  .capture-hint b{color:var(--coral-dark); display:block; font-size:26px; margin-bottom:6px;}
+  .capture-tag{position:absolute; top:9px; left:9px; font-weight:700; font-size:11px; padding:4px 10px; border-radius:14px; background:var(--coral); color:#fff; border:2px solid var(--brown); z-index:2;}
+
+  /* poster city small */
+  .poster-city{display:flex; gap:10px; align-items:center; background:var(--cream-2); border-radius:14px; padding:8px; margin-bottom:8px;}
+  .poster-city img{width:56px; height:56px; object-fit:cover; border-radius:10px; border:2px solid var(--brown); flex-shrink:0;}
+
+  /* before/after upload */
+  .ba-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:14px;}
+  @media (max-width:640px){.ba-grid{grid-template-columns:1fr;}}
+  .ba-slot{
+    border:2.5px dashed var(--brown); border-radius:var(--radius); background:#fff;
+    aspect-ratio:4/3; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:16px; position:relative; cursor:pointer; overflow:hidden;
+  }
+  .ba-slot.filled{border-style:solid;}
+  .ba-slot img{width:100%; height:100%; object-fit:cover; display:block; position:absolute; inset:0;}
+  .ba-tag{position:absolute; top:9px; left:9px; font-weight:700; font-size:11px; padding:4px 10px; border-radius:14px; letter-spacing:0.02em; z-index:2; border:2px solid var(--brown);}
+  .ba-tag.before{background:var(--sky);}
+  .ba-tag.after{background:var(--mint); color:#fff;}
+  .ba-upload-hint{font-size:12.5px; color:var(--brown-45);}
+  .ba-upload-hint b{color:var(--coral-dark); display:block; font-size:26px; margin-bottom:6px;}
+
+  /* buttons */
+  .btn{font-family:'Baloo 2', sans-serif; font-weight:700; font-size:14px; padding:11px 20px; border-radius:16px; border:2.5px solid var(--brown); background:#fff; color:var(--brown); cursor:pointer; transition:transform .1s ease; display:inline-flex; align-items:center; gap:8px; box-shadow:var(--shadow-pop-sm);}
+  .btn:hover{transform:translate(-1px,-1px);}
+  .btn:active{transform:translate(1px,1px); box-shadow:1px 1px 0 rgba(91,65,48,0.9);}
+  .btn-primary{background:var(--coral); color:#fff;}
+  .btn-ghost{background:#fff;}
+  .btn:disabled{opacity:0.4; cursor:not-allowed; pointer-events:none;}
+  .btn-row{display:flex; gap:12px; margin-top:8px; flex-wrap:wrap;}
+  .nav-buttons{display:flex; justify-content:space-between; margin-top:40px; padding-top:22px; border-top:2px dashed var(--mint-line);}
+
+  /* poster summary */
+  .poster{background:#fff; border:3px solid var(--brown); border-radius:24px; padding:0; overflow:hidden; box-shadow:var(--shadow-pop);}
+  .poster-head{background:var(--mint-dark); color:#fff; padding:22px 28px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;}
+  .poster-head h2{font-family:'Jua', sans-serif; font-size:23px; margin:0 0 4px;}
+  .poster-head .sub{font-size:12px; color:rgba(255,255,255,0.85);}
+  .poster-chip{background:var(--yellow); color:var(--brown); font-weight:700; font-size:12px; padding:6px 14px; border-radius:20px; border:2px solid var(--brown);}
+  .poster-body{padding:24px 28px; display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){.poster-body{grid-template-columns:1fr;}}
+  .poster-block{margin-bottom:16px;}
+  .poster-label{font-size:11px; font-weight:700; color:var(--coral-dark); margin-bottom:6px; display:flex; align-items:center; gap:6px;}
+  .poster-text{font-size:13px; line-height:1.6; color:var(--brown); white-space:pre-wrap;}
+  .poster-empty{color:var(--brown-45); font-style:italic;}
+  .poster-photo{width:100%; height:130px; object-fit:cover; border-radius:12px; border:2px solid var(--brown); margin-bottom:8px;}
+  .poster-ba{grid-column:1 / -1;}
+  .poster-ba-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px;}
+  .poster-ba-grid .frame{border:2.5px solid var(--brown); border-radius:14px; overflow:hidden; aspect-ratio:4/3;}
+  .poster-ba-grid img{width:100%; height:100%; object-fit:cover; display:block;}
+  .poster-ba-cap{font-size:11px; color:var(--brown-70); margin-top:4px; text-align:center;}
+
+  /* title block */
+  .title-block{position:sticky; bottom:0; background:var(--brown); color:#fff; border-top:3px solid var(--coral); padding:11px 56px; display:flex; gap:0; font-size:11px; z-index:10;}
+  @media (max-width:720px){.title-block{padding:10px 16px; flex-wrap:wrap; row-gap:6px;}}
+  .tb-cell{padding-right:20px; margin-right:20px; border-right:1px solid rgba(255,255,255,0.2);}
+  .tb-cell:last-child{border-right:none;}
+  .tb-key{color:rgba(255,255,255,0.5); margin-bottom:2px; font-size:9.5px;}
+  .tb-val{color:#fff; font-weight:600; font-size:11.5px;}
+  .tb-status{margin-left:auto; color:var(--yellow); display:flex; align-items:center; gap:6px;}
+  .tb-dot{width:6px; height:6px; border-radius:50%; background:var(--yellow); flex-shrink:0;}
+
+  /* cover */
+  .cover-wrap{max-width:640px;}
+  .cover-emoji{font-size:38px; margin-bottom:10px;}
+  .cover-h{font-family:'Jua', sans-serif; font-size:38px; line-height:1.35; color:var(--brown); margin:0 0 16px;}
+  .cover-p{font-size:14.5px; line-height:1.8; color:var(--brown-70); margin-bottom:30px;}
+  .steps-preview{display:flex; flex-direction:column; gap:8px; margin-bottom:30px;}
+  .steps-preview-row{display:flex; gap:12px; padding:11px 14px; align-items:center; border:2px solid var(--brown); border-radius:14px; background:#fff;}
+  .steps-preview-row .num{font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; color:var(--coral-dark); width:24px;}
+  .steps-preview-row .lbl{font-size:13.5px; color:var(--brown); font-weight:700;}
+  .steps-preview-row .desc{font-size:11.5px; color:var(--brown-45); margin-left:auto; text-align:right;}
+  @media (max-width:640px){.steps-preview-row .desc{display:none;}}
+
+  .toast{position:fixed; top:20px; right:20px; background:var(--brown); color:#fff; padding:10px 18px; border-radius:14px; font-size:13px; border:2px solid var(--yellow); box-shadow:0 8px 24px rgba(0,0,0,0.2); z-index:100; opacity:0; transform:translateY(-8px); transition:all .25s ease; pointer-events:none;}
+  .toast.show{opacity:1; transform:translateY(0);}
+
+  @media (max-width:820px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%; height:auto; position:relative; padding:16px;}
+    .nav-list{display:flex; overflow-x:auto; gap:4px;}
+    .nav-item{flex-direction:column; min-width:96px; align-items:center; text-align:center;}
+    .sidebar-foot{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand-emoji">🏘️</div>
+    <div class="brand-title">우리 동네<br>공간 혁신 프로젝트</div>
+    <div class="brand-sub">GIMPO URBAN LAB</div>
+
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 5 단계 완료</div>
+
+    <ul class="nav-list" id="navList"></ul>
+
+    <div class="sidebar-foot">작성한 내용은 이 기기에<br>자동 저장돼요.<br>완료 후 선생님께 제출하세요 🌱</div>
+  </aside>
+
+  <div class="main-wrap">
+    <div class="main-scroll" id="mainScroll"></div>
+    <div class="title-block" id="titleBlock"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">저장되었습니다</div>
+
+<script>
+/* ============ DATA ============ */
+function wmImg(name, w){ return `https://commons.wikimedia.org/wiki/Special:FilePath/${name}?width=${w||800}`; }
+
+const CITIES = {
+  vienna:{name:'오스트리아 빈', country:'AUSTRIA · VIENNA', desc:'낮은 범죄율, 높은 의료·교육 수준, 트램 중심 교통', img:wmImg('Vienna_Skyline.jpg'),
+    details:['세계에서 가장 살기 좋은 도시로 여러 해 동안 선정될 만큼 낮은 범죄율과 안전한 치안을 자랑해요.','전 국민 대상 보편적 의료보장 체계를 갖춰 병원 접근성과 의료 서비스 만족도가 매우 높아요.','무상에 가까운 대학 교육과 촘촘한 직업교육 시스템으로 교육 수준이 높아요.','도시 전역에 촘촘히 연결된 트램·지하철망 덕분에 자동차 없이도 이동이 편리해요.','오페라, 미술관, 궁전 등 풍부한 문화유산과 녹지 공원이 도시 곳곳에 자리해요.']},
+  copenhagen:{name:'덴마크 코펜하겐', country:'DENMARK · COPENHAGEN', desc:'창의력 교육, 촘촘한 보육·의료 지원', img:wmImg('Nyhavn_copenhagen.jpg'),
+    details:['유아부터 시작되는 창의력 중심 교육과정으로 놀이와 탐구를 통한 학습을 강조해요.','국가가 지원하는 촘촘한 어린이집·유치원 체계로 맞벌이 가정의 보육 부담이 적어요.','전 국민 무상 의료 시스템과 촘촘한 지역 보건소 네트워크를 갖췄어요.','학생과 청년을 위한 폭넓은 장학금·주거 지원 제도가 마련되어 있어요.','자전거 전용도로가 도시 전역에 뻗어 있어 통학·통근이 친환경적이에요.']},
+  vancouver:{name:'캐나다 밴쿠버', country:'CANADA · VANCOUVER', desc:'자연환경, 노인 친화 도시 설계', img:wmImg('Vancouver_Skyline_and_Mountains.jpg'),
+    details:['산과 바다에 둘러싸인 뛰어난 자연환경으로 세계적인 살기 좋은 도시 상위권에 자주 선정돼요.','캐나다의 보편적 의료보험 체계 아래 안정적인 의료 서비스를 누릴 수 있어요.','노인을 위한 배리어프리 설계와 커뮤니티 센터가 곳곳에 마련된 노인 친화 도시예요.','엄격한 도시계획으로 스카이라인과 녹지·해안선의 조화를 유지해요.','다양한 인종과 문화가 공존하는 개방적인 이민 도시로도 유명해요.']},
+  sanfrancisco:{name:'미국 샌프란시스코', country:'USA · SAN FRANCISCO', desc:'이민자 다양성, 포용적 문화 행사', img:wmImg('Golden_gate_bridge.jpg'),
+    details:['세계 각지에서 온 이민자 커뮤니티가 어우러진 다양성이 도시의 큰 특징이에요.','차이나타운, 미션 디스트릭트 등 다양한 문화 축제와 행사가 연중 열려요.','실리콘밸리와 인접해 혁신 산업과 스타트업 생태계가 발달했어요.','지역 비영리단체와 시민단체를 통한 포용적 사회 통합 프로그램이 활발해요.','언덕과 만(灣)이 어우러진 독특한 지형과 골든게이트교로 상징되는 랜드마크가 있어요.']},
+  hongkong:{name:'홍콩', country:'HONG KONG', desc:'금융·비즈니스 허브, 네트워킹', img:wmImg('Victoria_Harbour_(Hong_Kong).jpg'),
+    details:['아시아 대표 국제 금융 허브로 수많은 글로벌 기업의 본사와 지사가 모여 있어요.','촘촘한 비즈니스 네트워크와 자유무역 환경으로 창업과 투자가 활발해요.','세계에서 손꼽히는 고밀도 마천루 스카이라인과 효율적인 대중교통(MTR)을 갖췄어요.','동서양 문화가 공존하는 독특한 도시 문화를 형성하고 있어요.','낮은 법인세율과 간편한 행정 절차로 기업하기 좋은 환경을 제공해요.']},
+  melbourne:{name:'호주 멜버른', country:'AUSTRALIA · MELBOURNE', desc:'예술인을 위한 창작·지원 공간', img:wmImg('Melbourne_laneway_art.jpg'),
+    details:['골목(laneway) 곳곳에 합법적인 거리 예술이 허용되어 예술가들의 창작 무대가 되어줘요.','다양한 갤러리, 소극장, 라이브 음악 공간이 밀집한 문화 예술 도시예요.','예술인을 위한 스튜디오 임대 지원과 지역 예술 기금 제도가 마련되어 있어요.','세계에서 가장 살기 좋은 도시로 여러 차례 선정된 문화·교육 인프라를 갖췄어요.','다문화 인구가 어우러져 다양한 장르의 예술이 공존해요.']},
+  hamburg:{name:'독일 함부르크', country:'GERMANY · HAMBURG', desc:'장애 친화 시설, 촘촘한 복지', img:wmImg('HamburgSpeicherstadt.jpg'),
+    details:['독일에서 장애인 접근성 기준이 가장 엄격하게 지켜지는 도시 중 하나예요.','저상버스, 점자블록, 경사로 등 배리어프리 공공시설이 촘촘히 갖춰져 있어요.','사회복지 예산 비중이 높아 촘촘한 복지 안전망을 제공해요.','유럽 최대 항구도시 중 하나로 물류·해운 산업이 발달했어요.','오래된 창고 지구(슈파이헤어슈타트)를 문화 공간으로 재생한 도시재생 사례로도 유명해요.']},
+  singapore:{name:'싱가포르', country:'SINGAPORE', desc:'도심 속 녹색 공간, 생태계 관리', img:wmImg('Gardens_By_The_Bay.jpg'),
+    details:['정원 속 도시를 목표로 도심 곳곳에 대규모 인공 정원과 수직 녹화를 조성했어요.','가든스 바이 더 베이 등 첨단 생태 건축으로 도시와 자연을 결합했어요.','엄격한 도시계획법으로 신규 개발 시 녹지 비율을 의무적으로 확보해요.','효율적인 대중교통과 스마트시티 인프라로 세계적인 도시계획 모범 사례로 꼽혀요.','다민족 국가로서 종교·문화적 다양성을 존중하는 정책을 운영해요.']},
+  barcelona:{name:'에스파냐 바르셀로나', country:'SPAIN · BARCELONA', desc:'슈퍼블록, 차 없는 거리, 녹지', img:wmImg('Sagrada_Familia_(Barcelona).JPG'),
+    details:['슈퍼블록(Superilla) 정책으로 여러 블록을 묶어 내부 차량 통행을 제한하고 보행자 공간을 넓혔어요.','차량이 줄어든 거리에는 벤치, 놀이터, 나무가 들어서 주민들의 생활 공간이 되었어요.','가우디의 건축 유산 등 독창적인 건축 문화가 도시 정체성을 이뤄요.','지역 주민 참여형 도시계획으로 주민이 직접 거리 디자인에 의견을 낼 수 있어요.','지중해성 기후와 해안 접근성 덕분에 관광·문화 산업도 발달했어요.']},
+  amsterdam:{name:'네덜란드 암스테르담', country:'NETHERLANDS · AMSTERDAM', desc:'자전거 중심 교통, 대기오염 관리', img:wmImg('Amsterdam_canal.JPG'),
+    details:['전체 이동의 상당수를 자전거가 차지할 만큼 자전거 중심 교통 체계가 발달했어요.','도시 전역의 촘촘한 자전거 전용도로와 주차 인프라로 자동차 의존도를 낮췄어요.','자동차 통행 감소로 대기오염과 소음이 줄어 생활환경이 쾌적해요.','운하와 자전거가 어우러진 독특한 도시 경관을 형성해요.','지속가능한 교통정책의 세계적 모범 사례로 자주 소개돼요.']},
+};
+
+const CAREERS = [
+  {id:'education', icon:'📘', name:'교육계열', cities:['copenhagen','vienna']},
+  {id:'health', icon:'🩺', name:'의료·보건계열', cities:['vienna','vancouver']},
+  {id:'welfare', icon:'🤝', name:'사회복지계열', cities:['hamburg','copenhagen']},
+  {id:'environment', icon:'🌿', name:'환경·에너지계열', cities:['singapore','amsterdam']},
+  {id:'architecture', icon:'🏙️', name:'건축·도시공학계열', cities:['barcelona','vancouver']},
+  {id:'transport', icon:'🚆', name:'교통·물류공학계열', cities:['amsterdam','barcelona']},
+  {id:'it', icon:'💻', name:'IT·스마트시티계열', cities:['singapore','hongkong']},
+  {id:'art', icon:'🎨', name:'예술·디자인계열', cities:['melbourne','barcelona']},
+  {id:'media', icon:'🎬', name:'미디어·콘텐츠계열', cities:['sanfrancisco','melbourne']},
+  {id:'business', icon:'💼', name:'경영·경제계열', cities:['hongkong','singapore']},
+  {id:'global', icon:'🌍', name:'국제·다문화계열', cities:['sanfrancisco','hamburg']},
+  {id:'agri', icon:'🌾', name:'농업·생명과학계열', cities:['amsterdam','vancouver']},
+  {id:'convergence', icon:'✨', name:'자율융합 (여러 진로 관심)', cities:['vienna','sanfrancisco','hongkong','singapore']},
+  {id:'undecided', icon:'🌱', name:'진로 미선택 (아직 고민 중)', cities:['copenhagen','barcelona','melbourne','hamburg']},
+];
+
+const GIMPO_REGIONS = [
+  {id:'gochon', icon:'🚇', name:'고촌읍·풍무동', keyword:'교통·물류·도시공학', problem:'김포골드라인 극심한 출퇴근 혼잡도 및 서울 접근 구간의 도로 병목 현상, 물류 유통 증가에 따른 통학로 안전 위협', lat:37.6089, lng:126.7643},
+  {id:'unyang', icon:'📡', name:'운양동·장기동', keyword:'IT·스마트시티·문화/미디어', problem:'한강신도시 내 청소년 전용 문화·체육 인프라 부족 및 신도시 스마트 인프라의 지역사회 연계 활용 미흡', lat:37.6299, lng:126.6987},
+  {id:'tongjin', icon:'🌏', name:'통진읍', keyword:'다문화·사회복지·교육', problem:'외국인 주민 및 이주배경 청소년 비중 증가에 따른 언어·학습 격차, 다문화 가정을 위한 복지 및 지역사회 통합 인프라 부족', lat:37.6836, lng:126.6111},
+  {id:'haseong', icon:'🌾', name:'하성면·월곶면', keyword:'생태·농업·관광', problem:'접경지역(DMZ) 규제로 인한 인구 감소 및 초고령화, 한강하구 생태·평화 자원의 관광 및 농업 산업화 활용 미흡', lat:37.7094, lng:126.5684},
+  {id:'daegot', icon:'🏭', name:'대곶면·양촌읍', keyword:'환경·보건·행정', problem:'개별입지 공장 난개발로 인한 토양·대기 오염 및 주거지 밀접에 따른 주민 건강권·환경권 갈등 (환경정의 사례)', lat:37.6393, lng:126.6110},
+  {id:'custom', icon:'📍', name:'기타 지역 직접 선택', keyword:'', problem:'', lat:37.6154, lng:126.7157},
+];
+
+const REGION_PHOTOS = {
+  gochon:{img:wmImg('Korea-Seoul-Subway-inside-01.jpg'), caption:'출퇴근 시간대 혼잡한 지하철 내부 모습 (예시 사진)'},
+  unyang:{img:wmImg('Jamsil_Apartment_Complex_Phase_5_(6196571900).jpg'), caption:'신도시 대단지 아파트 밀집 지역 모습 (예시 사진)'},
+  tongjin:{img:wmImg('Russian_neighbourhood_near_ERICA_campus_in_Ansan,_Korea_01.jpg'), caption:'외국인 주민이 많은 다문화 거리 모습 (예시 사진)'},
+  haseong:{img:wmImg('Korean_Demilitarized_Zone_(DMZ)_from_the_South_Korean_side.jpg'), caption:'접경지역(DMZ) 인근 농촌 풍경 (예시 사진)'},
+  daegot:{img:wmImg('Kia_Motors_South_Korea_factory.jpg'), caption:'주거지와 인접한 공장 지대 모습 (예시 사진)'},
+};
+
+const STEPS = [
+  {id:'cover', num:'START', label:'시작하기'},
+  {id:'career', num:'01', label:'진로와 도시 사례'},
+  {id:'analysis', num:'02', label:'우리 지역 살펴보기'},
+  {id:'streetview', num:'03', label:'실제 지도에서 위치 확인'},
+  {id:'visualize', num:'04', label:'공간 시각화'},
+  {id:'summary', num:'05', label:'요약과 제출'},
+];
+
+const STORAGE_KEY = 'gimpo-space-project-v4';
+const TEACHER_EMAIL = 'tjdustoa23@gmail.com';
+const CLASS_GROUPS = ['A반','B반','C반','D반','E반'];
+
+/* ============ STATE ============ */
+let state = {
+  student:{classGroup:'', number:'', name:''},
+  career:'', cityChoice:'',
+  analysis:{region:''},
+  streetview:{capture:null, caption:''},
+  visualize:{beforeImg:null, afterImg:null, beforeCaption:'', afterCaption:''},
+  currentStep:0,
+};
+let saveTimer = null;
+
+/* ============ STORAGE ============ */
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const loaded = JSON.parse(res.value);
+      state = Object.assign({}, state, loaded);
+      state.analysis = Object.assign({region:''}, state.analysis||{});
+      state.streetview = Object.assign({capture:null, caption:''}, state.streetview||{});
+      state.student = Object.assign({classGroup:'', number:'', name:''}, state.student||{});
+    }
+  }catch(e){ /* no saved data yet */ }
+  render();
+}
+function saveStateDebounced(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveStateNow, 700); }
+async function saveStateNow(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); showToast('자동 저장됨 🌿'); }
+  catch(e){ console.error('저장 실패', e); }
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+/* ============ HELPERS ============ */
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function stepDone(id){
+  switch(id){
+    case 'cover': return !!(state.student.name && state.student.number && state.student.classGroup);
+    case 'career': return !!(state.career && state.cityChoice);
+    case 'analysis': return !!(state.analysis.region);
+    case 'streetview': return !!(state.streetview.capture);
+    case 'visualize': return !!(state.visualize.beforeImg && state.visualize.afterImg);
+    default: return false;
+  }
+}
+function completedCount(){ return STEPS.slice(0,-1).filter(s=>stepDone(s.id)).length; }
+function goTo(idx){
+  state.currentStep = idx; saveStateDebounced(); render();
+  document.getElementById('mainScroll').scrollTo({top:0, behavior:'instant'});
+}
+
+/* ============ RENDER: SIDEBAR / TITLE BLOCK ============ */
+function renderSidebar(){
+  const nav = document.getElementById('navList');
+  nav.innerHTML = STEPS.map((s,i)=>{
+    const active = i===state.currentStep ? 'active' : '';
+    const done = stepDone(s.id) ? 'done' : '';
+    return `<li class="nav-item ${active} ${done}" data-idx="${i}">
+      <span class="nav-num">${s.num}</span><span class="nav-text">${s.label}</span>
+    </li>`;
+  }).join('');
+  nav.querySelectorAll('.nav-item').forEach(el=> el.addEventListener('click', ()=> goTo(parseInt(el.dataset.idx))));
+  const cc = completedCount();
+  const total = STEPS.length-1;
+  document.getElementById('progressFill').style.width = (cc/total*100)+'%';
+  document.getElementById('progressLabel').textContent = `${cc} / ${total} 단계 완료`;
+}
+function renderTitleBlock(){
+  const s = STEPS[state.currentStep];
+  const tb = document.getElementById('titleBlock');
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+  tb.innerHTML = `
+    <div class="tb-cell"><div class="tb-key">PROJECT</div><div class="tb-val">공간 혁신</div></div>
+    <div class="tb-cell"><div class="tb-key">STUDENT</div><div class="tb-val">${esc(state.student.classGroup)||'-'} ${esc(state.student.number)||'-'}번 ${esc(state.student.name)||'미입력'}</div></div>
+    <div class="tb-cell"><div class="tb-key">STAGE</div><div class="tb-val">${s.num} · ${s.label}</div></div>
+    <div class="tb-cell"><div class="tb-key">DATE</div><div class="tb-val">${dateStr}</div></div>
+    <div class="tb-status"><span class="tb-dot"></span>진행 중</div>
+  `;
+}
+
+/* ============ RENDER MAIN ============ */
+function render(){
+  renderSidebar(); renderTitleBlock();
+  const el = document.getElementById('mainScroll');
+  const s = STEPS[state.currentStep];
+  el.innerHTML = renderStep(s.id);
+  attachStepEvents(s.id);
+}
+function navButtons(prevLabel, nextLabel){
+  return `<div class="nav-buttons">
+    ${state.currentStep>0 ? `<button class="btn btn-ghost" id="btnPrev">← ${prevLabel}</button>` : `<span></span>`}
+    ${state.currentStep<STEPS.length-1 ? `<button class="btn btn-primary" id="btnNext">${nextLabel} →</button>` : ``}
+  </div>`;
+}
+function renderStep(id){
+  return ({
+    cover: renderCover, career: renderCareer, analysis: renderAnalysis,
+    streetview: renderStreetview, visualize: renderVisualize, summary: renderSummary,
+  })[id]();
+}
+
+/* ---- STEP 0: COVER ---- */
+function renderCover(){
+  return `
+  <div class="cover-wrap">
+    <div class="cover-emoji">🏘️🌳🚲</div>
+    <h1 class="cover-h">우리 동네를,<br>진로의 눈으로 살펴봐요</h1>
+    <p class="cover-p">해외 선진 도시의 우수 사례를 진로 관점에서 살펴보고, 내가 살고 있는 김포의 지역 특성을 확인한 뒤, 실제 지도에서 문제 지점을 직접 찾아보는 프로젝트예요. 마지막에는 탐구 결과를 포스터 형태의 PDF로 만들어 선생님께 제출합니다.</p>
+
+    <div class="steps-preview">
+      ${STEPS.slice(1).map(s=>`<div class="steps-preview-row">
+        <span class="num">${s.num}</span><span class="lbl">${s.label}</span>
+        <span class="desc">${stepDescShort(s.id)}</span>
+      </div>`).join('')}
+    </div>
+
+    <div class="field-block">
+      <label class="field-label">학생 정보</label>
+      <div class="field-hint">분반과 학번, 이름만 입력하면 돼요.</div>
+      <div class="row-3">
+        <div>
+          <select id="inClassGroup">
+            <option value="">분반 선택</option>
+            ${CLASS_GROUPS.map(c=>`<option value="${c}" ${state.student.classGroup===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div><input type="text" id="inNumber" placeholder="학번" value="${esc(state.student.number)}"></div>
+        <div><input type="text" id="inName" placeholder="이름" value="${esc(state.student.name)}"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnStart">탐구 시작하기 →</button>
+    </div>
+  </div>`;
+}
+function stepDescShort(id){
+  return {
+    career:'진로 선택 + 도시 사례 자세히 보기', analysis:'지역 살펴보기 + 참고 사진',
+    streetview:'네이버 지도 거리뷰로 위치 확인', visualize:'비포/애프터 이미지', summary:'포스터 요약 및 제출',
+  }[id] || '';
+}
+
+/* ---- STEP 1: CAREER + CITY (detailed card) ---- */
+function renderCareer(){
+  const career = CAREERS.find(c=>c.id===state.career);
+  const city = CITIES[state.cityChoice];
+  return `
+  <div class="stage-eyebrow">🧭 STAGE 01</div>
+  <h1 class="stage-title">진로 분야를 고르고,<br>해외 도시 사례를 자세히 살펴보세요</h1>
+  <p class="stage-desc">관심 있는 진로 분야를 선택하면 관련된 해외 선진 도시 사례가 사진과 함께 나타나요. 도시를 클릭하면 그 도시의 우수한 특징이 자세하게 정리된 카드가 아래에 나타납니다.</p>
+
+  <div class="field-block">
+    <label class="field-label">① 진로 분야 선택</label>
+    <div class="career-grid">
+      ${CAREERS.map(c=>`
+        <div class="career-card ${c.id===state.career?'selected':''}" data-career="${c.id}">
+          <span class="career-icon">${c.icon}</span>
+          <div class="career-name">${c.name}</div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  ${career ? `
+  <div class="field-block">
+    <label class="field-label">② 참고 도시 사례 선택 · ${career.name}</label>
+    <div class="city-grid">
+      ${career.cities.map(cid=>{
+        const c = CITIES[cid];
+        return `<div class="city-card ${state.cityChoice===cid?'selected':''}" data-city="${cid}">
+          <img class="city-photo" src="${c.img}" alt="${c.name}" loading="lazy">
+          <div class="city-body">
+            <div class="city-name">${c.name}</div>
+            <div class="city-country">${c.country}</div>
+            <div class="city-desc">${c.desc}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  ${city ? `
+  <div class="city-detail">
+    <img src="${city.img}" alt="${city.name}">
+    <div class="city-detail-body">
+      <div class="city-detail-name">${city.name}</div>
+      <div class="city-detail-country">${city.country}</div>
+      <ul class="city-feature-list">
+        ${city.details.map(d=>`<li>${d}</li>`).join('')}
+      </ul>
+    </div>
+  </div>` : `<p class="field-hint">도시 카드를 클릭하면 자세한 특징이 나타나요.</p>`}
+  ` : `<p class="field-hint">먼저 진로 분야를 선택해주세요.</p>`}
+
+  ${navButtons('시작으로', '다음: 지역 살펴보기')}
+  `;
+}
+
+/* ---- STEP 2: ANALYSIS (region cards + recommend + reference photo) ---- */
+function renderAnalysis(){
+  const region = GIMPO_REGIONS.find(r=>r.id===state.analysis.region);
+  const photo = region ? REGION_PHOTOS[region.id] : null;
+  return `
+  <div class="stage-eyebrow">🗺️ STAGE 02</div>
+  <h1 class="stage-title">우리 지역(김포)을<br>진로의 눈으로 살펴보세요</h1>
+  <p class="stage-desc">각 지역 버튼 아래에 그 지역과 어울리는 진로 주제가 함께 표시돼요. 지역을 선택하면 추천 정보와 함께, 다음 단계에서 실제 지도로 확인할 지역의 참고 사진도 미리 볼 수 있어요.</p>
+
+  <div class="field-block">
+    <label class="field-label">지역 선택하기</label>
+    <div class="region-grid">
+      ${GIMPO_REGIONS.map(r=>`
+        <div class="region-card ${state.analysis.region===r.id?'selected':''}" data-region="${r.id}">
+          <span class="region-icon">${r.icon}</span>
+          <div class="region-name">${r.name}</div>
+          <span class="region-keyword-chip">${r.keyword || '자유 주제'}</span>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  ${region && region.keyword ? `
+  <div class="recommend-card">
+    <div class="recommend-label">📌 ${region.name} 추천 정보</div>
+    <div class="recommend-keyword">${region.keyword}</div>
+    <div class="recommend-text">${region.problem}</div>
+  </div>` : ''}
+
+  ${region && photo ? `
+  <div class="region-photo-card">
+    <img src="${photo.img}" alt="${region.name}">
+    <div class="region-photo-body">
+      <div class="region-photo-title">${region.icon} ${region.name}의 실제 모습 (참고 사진)</div>
+      <div class="field-hint" style="margin-bottom:0;">${photo.caption}</div>
+    </div>
+  </div>` : ''}
+
+  ${navButtons('진로와 도시 사례', '다음: 실제 지도에서 확인')}
+  `;
+}
+
+/* ---- STEP 3: STREETVIEW (Naver Map street view + capture upload) ---- */
+function renderStreetview(){
+  const region = GIMPO_REGIONS.find(r=>r.id===state.analysis.region);
+  const naverUrl = region ? `https://map.naver.com/p?lat=${region.lat}&lng=${region.lng}&title=${encodeURIComponent(region.name)}&zoom=16` : '';
+  return `
+  <div class="stage-eyebrow">🧭 STAGE 03</div>
+  <h1 class="stage-title">네이버 지도 거리뷰로<br>문제 지점을 직접 찾아보세요</h1>
+  <p class="stage-desc">아래 버튼을 누르면 실제 네이버 지도가 새 창으로 열려요. 지도 위 파란색 거리뷰 선을 클릭해 거리뷰(로드뷰)로 들어간 뒤, 화면을 돌려보며 우리 지역의 문제라고 생각하는 지점을 직접 찾아보세요. 마음에 드는 장면을 찾았다면 화면을 캡처해서 아래에 올려주세요.</p>
+
+  ${region ? `
+  <div class="naver-card">
+    <div class="naver-card-head">
+      <span class="emoji">${region.icon}</span>
+      <div>
+        <div class="region-title">${region.name}</div>
+        <div class="region-sub">위도 ${region.lat}, 경도 ${region.lng} 부근</div>
+      </div>
+    </div>
+    <a href="${naverUrl}" target="_blank" rel="noopener" class="btn btn-naver">🗺️ 네이버 지도에서 거리뷰 열기 (새 창)</a>
+
+    <ol class="guide-list">
+      <li>새로 열린 네이버 지도에서 파란색 선(거리뷰가 가능한 도로)을 클릭하세요.</li>
+      <li>거리뷰 화면에서 마우스(또는 손가락)로 화면을 돌리며 주변을 둘러보세요.</li>
+      <li>문제라고 생각하는 장면을 찾으면, 컴퓨터의 화면 캡처 기능으로 그 장면을 캡처하세요. (Windows: Win+Shift+S, Mac: Cmd+Shift+4)</li>
+      <li>캡처한 이미지 파일을 아래 칸에 업로드하세요.</li>
+    </ol>
+
+    <div class="capture-slot ${state.streetview.capture?'filled':''}" id="captureSlot">
+      ${state.streetview.capture ? `<span class="capture-tag">캡처됨</span><img src="${state.streetview.capture}" alt="캡처 이미지">` : `<div class="capture-hint"><b>+</b>캡처한 거리뷰 이미지 업로드<br>(클릭하여 선택)</div>`}
+    </div>
+    <input type="file" id="fileCapture" accept="image/*" style="display:none;">
+    <input type="text" id="inCaptureCaption" placeholder="이 장면에서 발견한 문제를 짧게 적어보세요 (예: 좁은 인도, 방치된 공터 등)" value="${esc(state.streetview.caption)}" style="margin-top:10px;">
+  </div>
+  ` : `<p class="field-hint">먼저 이전 단계에서 지역을 선택해주세요.</p>`}
+
+  ${navButtons('지역 살펴보기', '다음: 공간 시각화')}
+  `;
+}
+
+/* ---- STEP 4: VISUALIZE (before/after upload, uniform ratio) ---- */
+function baSlot(kind, label){
+  const img = kind==='before' ? state.visualize.beforeImg : state.visualize.afterImg;
+  const cap = kind==='before' ? state.visualize.beforeCaption : state.visualize.afterCaption;
+  return `
+  <div>
+    <div class="ba-slot ${img?'filled':''}" data-kind="${kind}">
+      <span class="ba-tag ${kind}">${kind==='before'?'BEFORE':'AFTER'}</span>
+      ${img ? `<img src="${img}" alt="${label}">` : `<div class="ba-upload-hint"><b>+</b>${label} 이미지 업로드<br>(클릭하여 선택)</div>`}
+    </div>
+    <input type="text" class="ba-caption" data-kind="${kind}" placeholder="${label} 이미지 설명" value="${esc(cap)}" style="margin-top:8px;">
+  </div>`;
+}
+function renderVisualize(){
+  return `
+  <div class="stage-eyebrow">🎨 STAGE 04</div>
+  <h1 class="stage-title">아이디어를<br>이미지로 시각화하세요</h1>
+  <p class="stage-desc">AI 이미지 생성 도구를 활용해 개선된 공간의 가상 이미지를 만든 뒤, 원래 모습(BEFORE)과 개선된 모습(AFTER)을 각각 업로드하세요. 사진 크기가 서로 달라도 자동으로 같은 비율로 맞춰져요.</p>
+
+  <div class="ba-grid">
+    ${baSlot('before','개선 전')}
+    ${baSlot('after','개선 후')}
+  </div>
+  <input type="file" id="fileBefore" accept="image/*" style="display:none;">
+  <input type="file" id="fileAfter" accept="image/*" style="display:none;">
+
+  <div class="field-hint" style="margin-top:6px;">※ 이미지는 이 기기(브라우저)에만 저장돼요. 용량이 큰 사진은 자동으로 축소되어 저장됩니다.</div>
+
+  ${navButtons('실제 지도에서 확인', '다음: 요약 및 제출')}
+  `;
+}
+
+/* ---- STEP 5: SUMMARY POSTER + SUBMIT ---- */
+function renderSummary(){
+  const career = CAREERS.find(c=>c.id===state.career);
+  const city = CITIES[state.cityChoice];
+  const region = GIMPO_REGIONS.find(r=>r.id===state.analysis.region);
+  const photo = region ? REGION_PHOTOS[region.id] : null;
+  return `
+  <div class="stage-eyebrow">📮 STAGE 05</div>
+  <h1 class="stage-title">탐구 요약 포스터 · 제출</h1>
+  <p class="stage-desc">지금까지 살펴본 내용이 포스터 한 장으로 정리됐어요. PDF로 다운로드한 뒤, 이메일 작성 버튼을 눌러 선생님께 파일을 첨부해 제출하세요.</p>
+
+  <div class="poster" id="summary-capture">
+    <div class="poster-head">
+      <div>
+        <h2>🏘️ 우리 동네 공간 혁신 프로젝트</h2>
+        <div class="sub">GIMPO URBAN LAB · 탐구 보고서</div>
+      </div>
+      <div class="poster-chip">${esc(state.student.classGroup)||'-'} ${esc(state.student.number)||'-'}번 ${esc(state.student.name)||'-'}</div>
+    </div>
+
+    <div class="poster-body">
+      <div class="poster-block">
+        <div class="poster-label">🧭 진로 & 참고 도시</div>
+        ${career?`<div class="poster-text" style="font-weight:700; margin-bottom:6px;">${career.name}</div>`:''}
+        ${city ? `<div class="poster-city"><img src="${city.img}" alt="${city.name}"><div><div style="font-weight:700; font-size:13px;">${city.name}</div><div style="font-size:11px; color:var(--brown-45);">${city.country}</div></div></div>
+        <div class="poster-text">${esc(city.details.slice(0,2).join(' '))}</div>` : '<span class="poster-empty">미선택</span>'}
+      </div>
+
+      <div class="poster-block">
+        <div class="poster-label">📍 우리 지역</div>
+        ${region ? `
+        ${photo?`<img class="poster-photo" src="${photo.img}" alt="${region.name}">`:''}
+        <div class="poster-text" style="font-weight:700; margin-bottom:4px;">${region.icon} ${region.name}</div>
+        <div class="poster-text">${region.problem||''}</div>
+        ` : '<span class="poster-empty">미선택</span>'}
+      </div>
+
+      <div class="poster-block">
+        <div class="poster-label">🧭 거리뷰로 찾은 문제 지점</div>
+        ${state.streetview.capture ? `
+        <img class="poster-photo" src="${state.streetview.capture}" alt="거리뷰 캡처">
+        <div class="poster-text">${esc(state.streetview.caption) || '<span class="poster-empty">설명 미작성</span>'}</div>
+        ` : '<span class="poster-empty">캡처 이미지 없음</span>'}
+      </div>
+
+      <div class="poster-block poster-ba">
+        <div class="poster-label">🎨 공간 시각화 (BEFORE → AFTER)</div>
+        ${(state.visualize.beforeImg || state.visualize.afterImg) ? `
+          <div class="poster-ba-grid">
+            <div><div class="frame">${state.visualize.beforeImg?`<img src="${state.visualize.beforeImg}">`:''}</div><div class="poster-ba-cap">BEFORE — ${esc(state.visualize.beforeCaption)}</div></div>
+            <div><div class="frame">${state.visualize.afterImg?`<img src="${state.visualize.afterImg}">`:''}</div><div class="poster-ba-cap">AFTER — ${esc(state.visualize.afterCaption)}</div></div>
+          </div>` : `<div class="poster-text poster-empty">업로드된 이미지 없음</div>`}
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-top:24px;">
+    <button class="btn btn-primary" id="btnPdf">① PDF로 다운로드</button>
+    <button class="btn" id="btnEmail">② 이메일 작성해서 제출하기</button>
+  </div>
+  <div class="field-hint" style="margin-top:10px;">
+    ※ 이메일 앱에는 파일이 자동으로 첨부되지 않아요. ①에서 다운로드한 PDF 파일을 메일 창에 직접 첨부한 뒤 보내주세요.<br>
+    제출받는 선생님 메일: <b>${TEACHER_EMAIL}</b>
+  </div>
+
+  ${navButtons('공간 시각화', '')}
+  `;
+}
+
+/* ============ EVENTS ============ */
+function attachStepEvents(id){
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  if(btnPrev) btnPrev.addEventListener('click', ()=> goTo(state.currentStep-1));
+  if(btnNext) btnNext.addEventListener('click', ()=> goTo(state.currentStep+1));
+
+  if(id==='cover'){
+    const sel = document.getElementById('inClassGroup');
+    if(sel) sel.addEventListener('change', ()=>{ state.student.classGroup = sel.value; saveStateDebounced(); });
+    bindText('inNumber', v=>state.student.number=v);
+    bindText('inName', v=>state.student.name=v);
+    const btnStart = document.getElementById('btnStart');
+    if(btnStart) btnStart.addEventListener('click', ()=> goTo(1));
+  }
+
+  if(id==='career'){
+    document.querySelectorAll('.career-card').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        state.career = el.dataset.career; state.cityChoice = '';
+        saveStateDebounced(); render();
+      });
+    });
+    document.querySelectorAll('.city-card').forEach(el=>{
+      el.addEventListener('click', ()=>{ state.cityChoice = el.dataset.city; saveStateDebounced(); render(); });
+    });
+  }
+
+  if(id==='analysis'){
+    document.querySelectorAll('.region-card').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        state.analysis.region = el.dataset.region;
+        saveStateDebounced(); render();
+      });
+    });
+  }
+
+  if(id==='streetview'){
+    const slot = document.getElementById('captureSlot');
+    if(slot) slot.addEventListener('click', ()=> document.getElementById('fileCapture').click());
+    const fileInput = document.getElementById('fileCapture');
+    if(fileInput) fileInput.addEventListener('change', handleCaptureUpload);
+    bindText('inCaptureCaption', v=>state.streetview.caption=v);
+  }
+
+  if(id==='visualize'){
+    document.querySelectorAll('.ba-slot').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const kind = el.dataset.kind;
+        document.getElementById(kind==='before'?'fileBefore':'fileAfter').click();
+      });
+    });
+    document.getElementById('fileBefore').addEventListener('change', e=>handleImage(e,'before'));
+    document.getElementById('fileAfter').addEventListener('change', e=>handleImage(e,'after'));
+    document.querySelectorAll('.ba-caption').forEach(el=>{
+      el.addEventListener('input', ()=>{
+        if(el.dataset.kind==='before') state.visualize.beforeCaption = el.value;
+        else state.visualize.afterCaption = el.value;
+        saveStateDebounced();
+      });
+    });
+  }
+
+  if(id==='summary'){
+    document.getElementById('btnPdf').addEventListener('click', generatePDF);
+    document.getElementById('btnEmail').addEventListener('click', submitByEmail);
+  }
+}
+function bindText(elId, setter){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  el.addEventListener('input', ()=>{ setter(el.value); saveStateDebounced(); });
+}
+
+/* shared: crop an uploaded image file to a 4:3 box and return a dataURL via callback */
+function cropTo43(file, callback){
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      const targetRatio = 4/3;
+      let sx=0, sy=0, sw=img.width, sh=img.height;
+      const srcRatio = sw/sh;
+      if(srcRatio > targetRatio){ sw = sh*targetRatio; sx = (img.width-sw)/2; }
+      else { sh = sw/targetRatio; sy = (img.height-sh)/2; }
+      const outW = 900, outH = 675;
+      const canvas = document.createElement('canvas');
+      canvas.width = outW; canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+      callback(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function handleImage(e, kind){
+  const file = e.target.files[0];
+  if(!file) return;
+  cropTo43(file, (dataUrl)=>{
+    if(kind==='before') state.visualize.beforeImg = dataUrl;
+    else state.visualize.afterImg = dataUrl;
+    saveStateDebounced(); render();
+  });
+}
+function handleCaptureUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  cropTo43(file, (dataUrl)=>{
+    state.streetview.capture = dataUrl;
+    saveStateDebounced(); render();
+  });
+}
+
+/* ============ PDF ============ */
+async function generatePDF(){
+  const btn = document.getElementById('btnPdf');
+  const orig = btn.textContent;
+  btn.textContent = 'PDF 생성 중...'; btn.disabled = true;
+  try{
+    const element = document.getElementById('summary-capture');
+    const canvas = await html2canvas(element, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','pt','a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height*imgWidth/canvas.width;
+    let heightLeft = imgHeight, position = 0;
+    pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);
+    heightLeft -= pageHeight;
+    while(heightLeft > 0){
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);
+      heightLeft -= pageHeight;
+    }
+    pdf.save(`공간혁신프로젝트_${state.student.name||'학생'}.pdf`);
+    showToast('PDF가 다운로드되었습니다 🎉');
+  }catch(err){ console.error(err); showToast('PDF 생성 중 오류가 발생했습니다'); }
+  btn.textContent = orig; btn.disabled = false;
+}
+
+/* ============ EMAIL ============ */
+function submitByEmail(){
+  const career = CAREERS.find(c=>c.id===state.career);
+  const city = CITIES[state.cityChoice];
+  const region = GIMPO_REGIONS.find(r=>r.id===state.analysis.region);
+  const who = `${state.student.classGroup||''} ${state.student.number||''}번 ${state.student.name||'학생'}`.trim();
+  const subject = `[공간 혁신 프로젝트] ${who} 제출`;
+  const bodyLines = [
+    `안녕하세요, ${state.student.name||''}입니다.`,
+    `'우리 동네 공간 혁신 프로젝트' 탐구 결과를 제출합니다.`,
+    ``,
+    `[진로 분야] ${career?career.name:'-'}`,
+    `[참고 도시 사례] ${city?city.name:'-'}`,
+    `[우리 지역] ${region?region.name:'-'}`,
+    `[거리뷰에서 찾은 문제] ${state.streetview.caption||'-'}`,
+    ``,
+    `* 다운로드한 요약 PDF 파일을 이 메일에 첨부해서 보내주세요.`,
+  ];
+  const mailto = `mailto:${TEACHER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+  window.location.href = mailto;
+}
+
+/* ============ INIT ============ */
+loadState();
+</script>
+</body>
+</html>
